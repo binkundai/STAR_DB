@@ -45,7 +45,7 @@
 </div>
 
 <script>
-    const API_URL = "star.daibinkun-8b8.workers.dev"; // 替换成你部署后的 Worker 域名
+    const API_URL = "https://star.daibinkun-8b8.workers.dev"; // 替换成你部署后的 Worker 域名
 
     new Vue({
         el: '#app',
@@ -86,7 +86,7 @@
                 await this.save();
             },
             login() {
-                if (prompt("请输入管理员密码") === "123456") this.isAdmin = true;
+                if (prompt("请输入管理员密码") === "Abby193823") this.isAdmin = true;
             }
         }
     });
