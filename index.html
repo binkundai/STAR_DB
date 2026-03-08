@@ -73,7 +73,6 @@
 </div>
 
 <script>
-    // 这里已经替换为你专属的 Worker 地址
     const API_BASE = "https://star.dabinkun-8b8.workers.dev"; 
 
     new Vue({
@@ -93,57 +92,61 @@
         methods: {
             async load() {
                 try {
-                    // 请求 /get 接口获取数据
-                    const res = await fetch(`${API_BASE}/get`);
-                    if (!res.ok) throw new Error(`状态码异常: ${res.status}`);
+                    const res = await fetch(`${API_BASE}/get`, {
+                        method: 'GET',
+                        mode: 'cors',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!res.ok) throw new Error(`状态码 ${res.status}`);
                     
                     const cloudData = await res.json();
                     this.kids = cloudData;
                     this.status = '✅ 云端同步成功';
                 } catch (e) {
                     console.error("加载出错:", e);
-                    this.status = '❌ 同步失败，请检查网络或后端配置';
+                    this.status = '❌ 同步失败: ' + e.message;
                 }
             },
             async save() {
-                this.status = '⏳ 正在保存至云端...';
+                this.status = '⏳ 正在请求保存...';
                 try {
-                    // 请求 /save 接口保存数据
                     const res = await fetch(`${API_BASE}/save`, {
                         method: 'POST',
+                        mode: 'cors', // 关键跨域配置
+                        headers: { 
+                            'Content-Type': 'application/json', // 明确告知发送的是JSON
+                            'Accept': 'application/json'
+                        },
                         body: JSON.stringify(this.kids)
                     });
                     
                     if (res.ok) {
-                        this.status = '✅ 云端保存成功';
+                        this.status = '✅ 云端保存成功，数据已更新';
                     } else {
-                        throw new Error('保存请求被拒绝');
+                        // 如果后端拒绝，抓取具体的拒绝理由
+                        const errText = await res.text();
+                        throw new Error(`[${res.status}] ${errText}`);
                     }
                 } catch (e) {
-                    console.error("保存出错:", e);
-                    this.status = '❌ 保存失败';
+                    console.error("保存报错详情:", e);
+                    // 把详细错误显示在页面底部
+                    this.status = '❌ 保存失败: ' + e.message;
                 }
             },
             async change(kidId, val) {
-                // 如果没有填写原因，给个默认文案
                 const defaultReason = val > 0 ? "表现优秀" : "需要改进";
                 const reason = this.reasons[kidId].trim() || defaultReason;
                 
-                // 处理浮点数运算，防止出现 0.1+0.2=0.300000004
                 let newTotal = this.kids[kidId].total + val;
                 this.kids[kidId].total = parseFloat(newTotal.toFixed(1));
                 
-                // 记录日志
                 this.kids[kidId].logs.push({
                     date: new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
                     change: val,
                     reason: reason
                 });
                 
-                // 清空当前输入框
                 this.reasons[kidId] = '';
-                
-                // 保存到云端
                 await this.save();
             },
             login() {
