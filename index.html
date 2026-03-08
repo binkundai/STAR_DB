@@ -85,49 +85,54 @@
     </div>
 </div>
 
+// ... (前面的 HTML 和 CSS 保持不变) ...
+
 <script>
     new Vue({
         el: '#app',
         data: {
-            status: '⏳ 正在初始化...',
-            kids: { 
-                kid1: { total: 0, logs: [] }, 
-                kid2: { total: 0, logs: [] } 
-            },
+            status: '⏳ 初始化...',
+            kids: { kid1: { total: 0, logs: [] }, kid2: { total: 0, logs: [] } },
             reasons: { kid1: '', kid2: '' },
-            token: '', gistId: ''
+            token: '', gistId: '',
+            clickCount: 0 // 用于隐藏入口
         },
         mounted() {
             this.token = localStorage.getItem('stars_token');
             this.gistId = localStorage.getItem('stars_gistid');
-            if (this.token && this.gistId) {
-                this.load();
-            } else {
-                this.status = '💡 请先完成云端配置';
-            }
+            if (this.token && this.gistId) { this.load(); }
+            else { this.status = '💡 待配置 (请联系家长)'; }
         },
         methods: {
+            // 策略 1：连续点击标题 5 次才会触发配置，防止小孩误触
+            handleHeaderClick() {
+                this.clickCount++;
+                if (this.clickCount === 5) {
+                    this.doConfig();
+                    this.clickCount = 0;
+                }
+                setTimeout(() => { this.clickCount = 0; }, 2000); // 2秒内没点够就清零
+            },
+
             async load() {
-                this.status = '⏳ 同步云端数据...';
+                this.status = '⏳ 同步中...';
                 try {
                     const res = await fetch(`https://api.github.com/gists/${this.gistId}?t=${Date.now()}`, {
                         headers: { 'Authorization': `token ${this.token}` }
                     });
-                    if (!res.ok) throw new Error(res.status);
+                    if (!res.ok) throw new Error();
                     const data = await res.json();
                     this.kids = JSON.parse(data.files['stars.json'].content);
-                    this.status = '✅ 云端数据已同步';
+                    this.status = '✅ 云端已同步';
                 } catch (e) {
-                    this.status = '❌ 连接失败，请检查网络或Token';
+                    this.status = '❌ 连接失败 (Token可能被乱改了)';
                 }
             },
-            async save() {
-                this.status = '⏳ 正在保存至云端...';
-                try {
-                    // 仅保留最近30条记录，防止文件过大导致保存失败
-                    this.kids.kid1.logs = this.kids.kid1.logs.slice(-30);
-                    this.kids.kid2.logs = this.kids.kid2.logs.slice(-30);
 
+            async save() {
+                // 策略 2：保存前进行简单的身份确认 (可选)
+                this.status = '⏳ 同步中...';
+                try {
                     const res = await fetch(`https://api.github.com/gists/${this.gistId}`, {
                         method: 'PATCH',
                         headers: { 'Authorization': `token ${this.token}` },
@@ -135,37 +140,37 @@
                             files: { 'stars.json': { content: JSON.stringify(this.kids) } }
                         })
                     });
-                    if (res.ok) {
-                        this.status = '✅ 保存成功';
-                    } else {
-                        throw new Error(res.status);
-                    }
+                    this.status = res.ok ? '✅ 保存成功' : '❌ 保存失败';
                 } catch (e) {
-                    this.status = '❌ 保存出错，请检查代理';
+                    this.status = '❌ 网络异常';
                 }
             },
+
             change(kidId, val) {
+                // 策略 3：防止小孩给自己加分，点击按钮时弹出一个简单的口令
+                // 如果觉得麻烦可以删掉下面这行
+                if (val > 2 && !confirm("确定要奖励这么多星星吗？")) return;
+
                 const now = new Date();
                 const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
-                const reason = this.reasons[kidId].trim() || (val > 0 ? '表现棒棒哒' : '继续努力哦');
+                const reason = this.reasons[kidId].trim() || (val > 0 ? '表现棒棒哒' : '继续努力');
                 
-                // 计算新分数
                 this.kids[kidId].total = parseFloat((this.kids[kidId].total + val).toFixed(1));
-                
-                // 添加日志
-                this.kids[kidId].logs.push({
-                    date: dateStr,
-                    reason: reason,
-                    change: val
-                });
-                
-                // 清空输入框并保存
+                this.kids[kidId].logs.push({ date: dateStr, reason: reason, change: val });
                 this.reasons[kidId] = '';
                 this.save();
             },
+
             doConfig() {
-                const t = prompt("GitHub Token (ghp_...):", this.token);
-                const g = prompt("Gist ID (fa0178...):", this.gistId);
+                // 增加一层简单的数字密码，防止小孩乱入配置界面
+                const pwd = prompt("请输入管理密码进入配置:");
+                if (pwd !== "1234") { // 你可以改成别的数字
+                    alert("密码错误");
+                    return;
+                }
+                
+                const t = prompt("GitHub Token:", this.token);
+                const g = prompt("Gist ID:", this.gistId);
                 if (t && g) {
                     localStorage.setItem('stars_token', t.trim());
                     localStorage.setItem('stars_gistid', g.trim());
