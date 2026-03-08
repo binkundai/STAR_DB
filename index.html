@@ -1,35 +1,165 @@
-// 替换 index.html 中的整个 <script> 部分
-const API_URL = "https://star.dabinkun-8b8.workers.dev"; 
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云端星星荣誉榜</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <style>
+        :root { --gold: #f1c40f; --green: #2ecc71; --red: #e74c3c; }
+        body { font-family: 'PingFang SC', system-ui, sans-serif; background: #fdf6e3; padding: 15px; margin: 0; color: #333; }
+        .container { max-width: 600px; margin: auto; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.08); border: 1px solid #eee; }
+        h1 { text-align: center; color: #d35400; font-size: 24px; }
+        .kid-name { font-size: 22px; margin: 0; color: #2c3e50; font-weight: bold; }
+        .stars-display { font-size: 50px; color: var(--gold); margin: 10px 0; font-weight: bold; text-shadow: 1px 1px 0px #f39c12; }
+        
+        /* 管理员面板 */
+        .admin-panel { background: #f9f9f9; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px dashed #ccc; }
+        .reason-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; box-sizing: border-box; font-size: 14px; }
+        .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; align-items: center; }
+        .label { font-weight: bold; width: 100%; margin-bottom: 8px; font-size: 14px; }
+        
+        button { border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 14px; }
+        .btn-add { background: var(--green); color: white; }
+        .btn-sub { background: var(--red); color: white; }
+        .btn-add:active, .btn-sub:active { transform: scale(0.9); }
+        
+        .history { border-top: 1px solid #eee; margin-top: 15px; padding-top: 10px; font-size: 13px; color: #666; max-height: 120px; overflow-y: auto; }
+        .log-item { display: flex; justify-content: space-between; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #f0f0f0; }
+        .status-bar { text-align: center; font-size: 13px; color: #7f8c8d; margin-top: 20px; padding-bottom: 20px; }
+        .login-btn { display: inline-block; margin-bottom: 10px; padding: 8px 15px; background: #ecf0f1; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
 
-new Vue({
-    el: '#app',
-    data: {
-        isAdmin: false,
-        status: '正在连接云端...',
-        reasons: { kid1: '', kid2: '' },
-        kids: { kid1: { total: 0, logs: [] }, kid2: { total: 0, logs: [] } }
-    },
-    async created() {
-        // 增加延时请求，防止 GitHub 加载过快导致的网络竞争
-        setTimeout(() => { this.load(); }, 500);
-    },
-    methods: {
-        async load() {
-            try {
-                // 明确指定请求头和模式
-                const res = await fetch(API_URL, { 
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                if (!res.ok) throw new Error(`HTTP状态码: ${res.status}`);
-                this.kids = await res.json();
-                this.status = '☁️ 云端同步成功';
-            } catch (e) {
-                console.error("同步详情:", e);
-                this.status = '❌ 同步失败: ' + e.message;
+<div id="app" class="container">
+    <h1>🌟 宝贝成长云榜单</h1>
+    
+    <div v-for="(kid, id) in kids" :key="id" class="card">
+        <div class="kid-name">{{ id === 'kid1' ? '大宝' : '小宝' }}</div>
+        <div class="stars-display">✨ {{ kid.total }}</div>
+        
+        <div class="history">
+            <div v-for="(log, index) in kid.logs.slice().reverse().slice(0, 10)" :key="index" class="log-item">
+                <span>{{ log.date }} | {{ log.reason }}</span>
+                <span :style="{color: log.change > 0 ? 'green' : 'red', fontWeight: 'bold'}">
+                    {{ log.change > 0 ? '+' : '' }}{{ log.change }}
+                </span>
+            </div>
+        </div>
+
+        <div v-if="isAdmin" class="admin-panel">
+            <input v-model="reasons[id]" class="reason-input" placeholder="输入原因 (例如: 独立阅读、乱发脾气)...">
+            
+            <div class="label">🟢 加分奖励：</div>
+            <div class="btn-row">
+                <button v-for="v in [0.5, 1, 2, 3, 4, 5]" :key="'add'+v" class="btn-add" @click="change(id, v)">+{{v}}</button>
+            </div>
+
+            <div class="label">🔴 减分提醒：</div>
+            <div class="btn-row">
+                <button v-for="v in [0.5, 1, 2, 3, 4, 5]" :key="'sub'+v" class="btn-sub" @click="change(id, -v)">-{{v}}</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div class="login-btn" @click="login">
+            {{ isAdmin ? '🔓 退出管理模式' : '🔒 家长点击登录管理' }}
+        </div>
+        <div>系统状态: <strong>{{ status }}</strong></div>
+    </div>
+</div>
+
+<script>
+    // 这里已经替换为你专属的 Worker 地址
+    const API_BASE = "https://star.dabinkun-8b8.workers.dev"; 
+
+    new Vue({
+        el: '#app',
+        data: {
+            isAdmin: false,
+            status: '正在连接云端...',
+            reasons: { kid1: '', kid2: '' },
+            kids: { 
+                kid1: { total: 0, logs: [] }, 
+                kid2: { total: 0, logs: [] } 
             }
         },
-        // ... 其余 save 和 change 函数保持不变 ...
-    }
-});
+        mounted() {
+            this.load();
+        },
+        methods: {
+            async load() {
+                try {
+                    // 请求 /get 接口获取数据
+                    const res = await fetch(`${API_BASE}/get`);
+                    if (!res.ok) throw new Error(`状态码异常: ${res.status}`);
+                    
+                    const cloudData = await res.json();
+                    this.kids = cloudData;
+                    this.status = '✅ 云端同步成功';
+                } catch (e) {
+                    console.error("加载出错:", e);
+                    this.status = '❌ 同步失败，请检查网络或后端配置';
+                }
+            },
+            async save() {
+                this.status = '⏳ 正在保存至云端...';
+                try {
+                    // 请求 /save 接口保存数据
+                    const res = await fetch(`${API_BASE}/save`, {
+                        method: 'POST',
+                        body: JSON.stringify(this.kids)
+                    });
+                    
+                    if (res.ok) {
+                        this.status = '✅ 云端保存成功';
+                    } else {
+                        throw new Error('保存请求被拒绝');
+                    }
+                } catch (e) {
+                    console.error("保存出错:", e);
+                    this.status = '❌ 保存失败';
+                }
+            },
+            async change(kidId, val) {
+                // 如果没有填写原因，给个默认文案
+                const defaultReason = val > 0 ? "表现优秀" : "需要改进";
+                const reason = this.reasons[kidId].trim() || defaultReason;
+                
+                // 处理浮点数运算，防止出现 0.1+0.2=0.300000004
+                let newTotal = this.kids[kidId].total + val;
+                this.kids[kidId].total = parseFloat(newTotal.toFixed(1));
+                
+                // 记录日志
+                this.kids[kidId].logs.push({
+                    date: new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    change: val,
+                    reason: reason
+                });
+                
+                // 清空当前输入框
+                this.reasons[kidId] = '';
+                
+                // 保存到云端
+                await this.save();
+            },
+            login() {
+                if (this.isAdmin) {
+                    this.isAdmin = false;
+                    return;
+                }
+                const pass = prompt("请输入管理员密码 (初始密码为123456)");
+                if (pass === "123456") {
+                    this.isAdmin = true;
+                } else if (pass !== null) {
+                    alert("密码错误");
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html>
