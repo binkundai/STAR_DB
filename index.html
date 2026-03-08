@@ -2,161 +2,97 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>云端星星荣誉榜</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🌟 宝贝成长云榜单</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <style>
         :root { --gold: #f1c40f; --green: #2ecc71; --red: #e74c3c; }
-        body { font-family: 'PingFang SC', system-ui, sans-serif; background: #fdf6e3; padding: 15px; margin: 0; color: #333; }
-        .container { max-width: 600px; margin: auto; }
-        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.08); border: 1px solid #eee; }
-        h1 { text-align: center; color: #d35400; font-size: 24px; }
-        .kid-name { font-size: 22px; margin: 0; color: #2c3e50; font-weight: bold; }
-        .stars-display { font-size: 50px; color: var(--gold); margin: 10px 0; font-weight: bold; text-shadow: 1px 1px 0px #f39c12; }
-        
-        /* 管理员面板 */
-        .admin-panel { background: #f9f9f9; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px dashed #ccc; }
-        .reason-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; box-sizing: border-box; font-size: 14px; }
-        .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; align-items: center; }
-        .label { font-weight: bold; width: 100%; margin-bottom: 8px; font-size: 14px; }
-        
-        button { border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 14px; }
-        .btn-add { background: var(--green); color: white; }
-        .btn-sub { background: var(--red); color: white; }
-        .btn-add:active, .btn-sub:active { transform: scale(0.9); }
-        
-        .history { border-top: 1px solid #eee; margin-top: 15px; padding-top: 10px; font-size: 13px; color: #666; max-height: 120px; overflow-y: auto; }
-        .log-item { display: flex; justify-content: space-between; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #f0f0f0; }
-        .status-bar { text-align: center; font-size: 13px; color: #7f8c8d; margin-top: 20px; padding-bottom: 20px; }
-        .login-btn { display: inline-block; margin-bottom: 10px; padding: 8px 15px; background: #ecf0f1; border-radius: 8px; cursor: pointer; }
+        body { font-family: 'PingFang SC', system-ui; background: #fdf6e3; padding: 15px; margin: 0; -webkit-tap-highlight-color: transparent; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
+        .name { font-size: 20px; font-weight: bold; color: #2c3e50; }
+        .stars { font-size: 50px; color: var(--gold); margin: 10px 0; font-weight: bold; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; border: none; border-radius: 12px; padding: 15px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; transition: opacity 0.2s; }
+        .btn-add { background: var(--green); }
+        .btn-sub { background: var(--red); }
+        .status { text-align: center; font-size: 12px; color: #95a5a6; margin-top: 20px; }
+        .config-link { color: #3498db; text-decoration: underline; font-size: 12px; margin-top: 10px; display: block; }
     </style>
 </head>
 <body>
-
-<div id="app" class="container">
-    <h1>🌟 宝贝成长云榜单</h1>
+<div id="app" style="max-width: 500px; margin: auto;">
+    <h2 style="text-align: center; color: #d35400; letter-spacing: 2px;">星星荣誉榜</h2>
     
     <div v-for="(kid, id) in kids" :key="id" class="card">
-        <div class="kid-name">{{ id === 'kid1' ? '大宝' : '小宝' }}</div>
-        <div class="stars-display">✨ {{ kid.total }}</div>
-        
-        <div class="history">
-            <div v-for="(log, index) in kid.logs.slice().reverse().slice(0, 10)" :key="index" class="log-item">
-                <span>{{ log.date }} | {{ log.reason }}</span>
-                <span :style="{color: log.change > 0 ? 'green' : 'red', fontWeight: 'bold'}">
-                    {{ log.change > 0 ? '+' : '' }}{{ log.change }}
-                </span>
-            </div>
-        </div>
-
-        <div v-if="isAdmin" class="admin-panel">
-            <input v-model="reasons[id]" class="reason-input" placeholder="输入原因 (例如: 独立阅读、乱发脾气)...">
-            
-            <div class="label">🟢 加分奖励：</div>
-            <div class="btn-row">
-                <button v-for="v in [0.5, 1, 2, 3, 4, 5]" :key="'add'+v" class="btn-add" @click="change(id, v)">+{{v}}</button>
-            </div>
-
-            <div class="label">🔴 减分提醒：</div>
-            <div class="btn-row">
-                <button v-for="v in [0.5, 1, 2, 3, 4, 5]" :key="'sub'+v" class="btn-sub" @click="change(id, -v)">-{{v}}</button>
-            </div>
+        <div class="name">{{ id === 'kid1' ? '大宝' : '小宝' }}</div>
+        <div class="stars">✨ {{ kid.total }}</div>
+        <div class="btn-group">
+            <button class="btn-add" @click="change(id, 1)">奖励 +1</button>
+            <button class="btn-sub" @click="change(id, -1)">提醒 -1</button>
         </div>
     </div>
 
-    <div class="status-bar">
-        <div class="login-btn" @click="login">
-            {{ isAdmin ? '🔓 退出管理模式' : '🔒 家长点击登录管理' }}
-        </div>
-        <div>系统状态: <strong>{{ status }}</strong></div>
+    <div class="status">
+        <div>{{ status }}</div>
+        <span class="config-link" @click="doConfig">⚙️ 首次使用：点此配置云端密钥</span>
     </div>
 </div>
 
 <script>
-    const API_BASE = "https://star.dabinkun-8b8.workers.dev"; 
-
     new Vue({
         el: '#app',
         data: {
-            isAdmin: false,
-            status: '正在连接云端...',
-            reasons: { kid1: '', kid2: '' },
-            kids: { 
-                kid1: { total: 0, logs: [] }, 
-                kid2: { total: 0, logs: [] } 
-            }
+            status: '等待配置...',
+            kids: { kid1: { total: 0, logs: [] }, kid2: { total: 0, logs: [] } },
+            token: '', gistId: ''
         },
         mounted() {
-            this.load();
+            this.token = localStorage.getItem('stars_token');
+            this.gistId = localStorage.getItem('stars_gistid');
+            if (this.token && this.gistId) {
+                this.load();
+            }
         },
         methods: {
             async load() {
+                this.status = '⏳ 正在同步...';
                 try {
-                    const res = await fetch(`${API_BASE}/get`, {
-                        method: 'GET',
-                        mode: 'cors',
-                        headers: { 'Content-Type': 'application/json' }
+                    const res = await fetch(`https://api.github.com/gists/${this.gistId}?t=${Date.now()}`, {
+                        headers: { 'Authorization': `token ${this.token}` }
                     });
-                    if (!res.ok) throw new Error(`状态码 ${res.status}`);
-                    
-                    const cloudData = await res.json();
-                    this.kids = cloudData;
-                    this.status = '✅ 云端同步成功';
+                    if (!res.ok) throw new Error(res.status);
+                    const data = await res.json();
+                    this.kids = JSON.parse(data.files['stars.json'].content);
+                    this.status = '✅ 云端数据已就绪';
                 } catch (e) {
-                    console.error("加载出错:", e);
-                    this.status = '❌ 同步失败: ' + e.message;
+                    this.status = '❌ 连接失败：' + (e.message === '401' ? 'Token已失效' : '网络不稳定');
                 }
             },
             async save() {
-    this.status = '⏳ 正在尝试存入云端...';
-    try {
-        // 限制日志数量，防止 URL 超出浏览器限制 (2000字符)
-        this.kids.kid1.logs = this.kids.kid1.logs.slice(-20);
-        this.kids.kid2.logs = this.kids.kid2.logs.slice(-20);
-        
-        const jsonData = JSON.stringify(this.kids);
-        // 💡 使用 GET 模式保存，绕过部分网络对 POST 的拦截
-        const res = await fetch(`${API_BASE}/save?d=${encodeURIComponent(jsonData)}`, {
-            method: 'GET',
-            mode: 'cors'
-        });
-        
-        if (res.ok) {
-            this.status = '✅ 云端保存成功';
-        } else {
-            throw new Error(`连接不稳定 (${res.status})`);
-        }
-    } catch (e) {
-        console.error(e);
-        this.status = '❌ 保存失败：建议切换 Wi-Fi 或开启代理';
-    }
-            },
-            async change(kidId, val) {
-                const defaultReason = val > 0 ? "表现优秀" : "需要改进";
-                const reason = this.reasons[kidId].trim() || defaultReason;
-                
-                let newTotal = this.kids[kidId].total + val;
-                this.kids[kidId].total = parseFloat(newTotal.toFixed(1));
-                
-                this.kids[kidId].logs.push({
-                    date: new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                    change: val,
-                    reason: reason
-                });
-                
-                this.reasons[kidId] = '';
-                await this.save();
-            },
-            login() {
-                if (this.isAdmin) {
-                    this.isAdmin = false;
-                    return;
+                this.status = '⏳ 保存中...';
+                try {
+                    const res = await fetch(`https://api.github.com/gists/${this.gistId}`, {
+                        method: 'PATCH',
+                        headers: { 'Authorization': `token ${this.token}` },
+                        body: JSON.stringify({ files: { 'stars.json': { content: JSON.stringify(this.kids) } } })
+                    });
+                    this.status = res.ok ? '✅ 已存入云端' : '❌ 保存失败';
+                } catch (e) {
+                    this.status = '❌ 保存出错';
                 }
-                const pass = prompt("请输入管理员密码 (初始密码为123456)");
-                if (pass === "123456") {
-                    this.isAdmin = true;
-                } else if (pass !== null) {
-                    alert("密码错误");
+            },
+            change(kidId, val) {
+                this.kids[kidId].total = parseFloat((this.kids[kidId].total + val).toFixed(1));
+                this.save();
+            },
+            doConfig() {
+                const t = prompt("请输入新的 GitHub Token (ghp_...):");
+                const g = prompt("请输入 Gist ID (fa0178...):");
+                if (t && g) {
+                    localStorage.setItem('stars_token', t.trim());
+                    localStorage.setItem('stars_gistid', g.trim());
+                    alert("配置成功，正在刷新！");
+                    location.reload();
                 }
             }
         }
