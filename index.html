@@ -9,12 +9,9 @@
         :root { --gold: #f1c40f; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
         body { font-family: 'PingFang SC', system-ui; background: #f8f9fa; padding: 15px; margin: 0; color: #2c3e50; -webkit-user-select: none; }
         .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #edf2f7; }
-        .kid-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f1f1; padding-bottom: 10px; }
-        /* 标题现在是隐藏门的触发点 */
-        .page-title { text-align: center; color: #2d3748; margin: 20px 0; font-size: 24px; letter-spacing: 2px; cursor: pointer; transition: 0.2s; }
-        .page-title:active { transform: scale(0.95); opacity: 0.7; }
+        .page-title { text-align: center; color: #2d3748; margin: 20px 0; font-size: 24px; letter-spacing: 2px; cursor: pointer; }
         .name { font-size: 22px; font-weight: bold; color: #1a202c; }
-        .total-stars { font-size: 40px; color: var(--gold); font-weight: 900; margin: 15px 0; text-align: center; }
+        .total-stars { font-size: 45px; color: var(--gold); font-weight: 900; margin: 15px 0; text-align: center; text-shadow: 1px 1px 0 rgba(0,0,0,0.05); }
         
         .history-box { background: #fdfaf3; border-radius: 12px; padding: 12px; margin-top: 15px; font-size: 13px; max-height: 140px; overflow-y: auto; border: 1px solid #f3eada; }
         .log-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; align-items: center; }
@@ -22,16 +19,16 @@
         .log-reason { flex: 1; margin: 0 8px; color: #4a5568; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .admin-section { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e0; }
-        .reason-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 12px; box-sizing: border-box; font-size: 14px; background: #f7fafc; }
-        .score-label { font-size: 11px; font-weight: bold; margin: 10px 0 5px; color: #718096; text-transform: uppercase; }
+        .score-label { font-size: 11px; font-weight: bold; margin: 10px 0 8px; color: #718096; display: flex; align-items: center; }
+        .score-label::before { content: ''; display: inline-block; width: 4px; height: 12px; background: currentColor; margin-right: 6px; border-radius: 2px; }
         
-        /* 适应 0.5, 1, 2, 5, 10, 15 的按钮矩阵 */
-        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        button { border: none; border-radius: 12px; padding: 12px 5px; font-weight: bold; cursor: pointer; color: white; box-shadow: 0 4px 0 rgba(0,0,0,0.1); }
-        .btn-add { background: var(--green); }
-        .btn-sub { background: var(--red); }
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 15px; }
+        button { border: none; border-radius: 14px; padding: 14px 5px; font-weight: bold; cursor: pointer; color: white; font-size: 16px; transition: all 0.1s; }
+        button:active { transform: translateY(2px); opacity: 0.8; }
+        .btn-add { background: var(--green); box-shadow: 0 4px 0 #27ae60; }
+        .btn-sub { background: var(--red); box-shadow: 0 4px 0 #c0392b; }
         
-        .status-bar { text-align: center; font-size: 10px; color: #cbd5e0; margin: 30px 0; }
+        .status-bar { text-align: center; font-size: 10px; color: #cbd5e0; margin: 30px 0; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -39,15 +36,11 @@
     <h2 class="page-title" @click="handleHeaderClick">🌟 宝贝成长荣誉榜</h2>
     
     <div v-for="(kid, id) in kids" :key="id" class="card">
-        <div class="kid-header">
-            <span class="name">{{ id === 'kid1' ? '嘟嘟 Albert' : '啵啵 Clement' }}</span>
-            <span style="font-size: 11px; color: #a0aec0;">ID: {{ id }}</span>
-        </div>
-        
+        <div class="name">{{ id === 'kid1' ? '嘟嘟 Albert' : '啵啵 Clement' }}</div>
         <div class="total-stars">✨ {{ kid.total }}</div>
         
         <div class="history-box">
-            <div v-if="kid.logs.length === 0" style="color:#ccc; text-align:center; padding:10px;">暂无记录</div>
+            <div v-if="kid.logs.length === 0" style="color:#ccc; text-align:center; padding:10px;">尚未开启成长记录</div>
             <div v-for="(log, idx) in kid.logs.slice().reverse().slice(0, 10)" :key="idx" class="log-item">
                 <span class="log-date">{{ log.date }}</span>
                 <span class="log-reason">{{ log.reason }}</span>
@@ -58,23 +51,21 @@
         </div>
 
         <div class="admin-section">
-            <input v-model="reasons[id]" class="reason-input" :placeholder="'输入加减星原因...'">
-            
-            <div class="score-label">🟢 奖励分值</div>
+            <div class="score-label" style="color: var(--green)">奖励星星</div>
             <div class="btn-grid">
-                <button v-for="v in [0.5, 1, 2, 5, 10, 15]" class="btn-add" @click="change(id, v)">+{{v}}</button>
+                <button v-for="v in [0.5, 1, 2, 5, 10, 15]" class="btn-add" @click="startProcess(id, v)">+{{v}}</button>
             </div>
             
-            <div class="score-label">🔴 扣减分值</div>
+            <div class="score-label" style="color: var(--red)">提醒改进</div>
             <div class="btn-grid">
-                <button v-for="v in [0.5, 1, 2, 5, 10, 15]" class="btn-sub" @click="change(id, -v)">-{{v}}</button>
+                <button v-for="v in [0.5, 1, 2, 5, 10, 15]" class="btn-sub" @click="startProcess(id, -v)">-{{v}}</button>
             </div>
         </div>
     </div>
 
     <div class="status-bar">
         <div>{{ status }}</div>
-        <div style="opacity: 0.3;">v2.6 | GitHub Gist Cloud</div>
+        <div style="opacity: 0.4; margin-top:5px;">V3.0 | SHARED CLOUD STORAGE</div>
     </div>
 </div>
 
@@ -82,9 +73,8 @@
     new Vue({
         el: '#app',
         data: {
-            status: '⏳ 初始化...',
+            status: '⏳ 同步中...',
             kids: { kid1: { total: 0, logs: [] }, kid2: { total: 0, logs: [] } },
-            reasons: { kid1: '', kid2: '' },
             token: '', gistId: '',
             clickCount: 0
         },
@@ -92,10 +82,9 @@
             this.token = localStorage.getItem('stars_token');
             this.gistId = localStorage.getItem('stars_gistid');
             if (this.token && this.gistId) { this.load(); }
-            else { this.status = '💡 待配置 (连击标题进入)'; }
+            else { this.status = '💡 待授权 (连击标题进入)'; }
         },
         methods: {
-            // 隐藏入口：2秒内连点5次标题
             handleHeaderClick() {
                 this.clickCount++;
                 if (this.clickCount === 5) {
@@ -105,58 +94,61 @@
                 setTimeout(() => { this.clickCount = 0; }, 2000);
             },
             async load() {
-                this.status = '⏳ 同步中...';
                 try {
                     const res = await fetch(`https://api.github.com/gists/${this.gistId}?t=${Date.now()}`, {
                         headers: { 'Authorization': `token ${this.token}` }
                     });
-                    if (!res.ok) throw new Error();
                     const data = await res.json();
                     this.kids = JSON.parse(data.files['stars.json'].content);
-                    this.status = '✅ 云端已连接';
+                    this.status = '✅ 云端已同步';
                 } catch (e) {
-                    this.status = '❌ 配置错误或网络异常';
+                    this.status = '❌ 连接失败 (请检查Token/网络)';
                 }
             },
             async save() {
-                this.status = '⏳ 保存中...';
+                this.status = '⏳ 同步中...';
                 try {
-                    // 历史记录修剪，防止数据包过大
                     this.kids.kid1.logs = this.kids.kid1.logs.slice(-30);
                     this.kids.kid2.logs = this.kids.kid2.logs.slice(-30);
-                    
-                    const res = await fetch(`https://api.github.com/gists/${this.gistId}`, {
+                    await fetch(`https://api.github.com/gists/${this.gistId}`, {
                         method: 'PATCH',
                         headers: { 'Authorization': `token ${this.token}` },
-                        body: JSON.stringify({
-                            files: { 'stars.json': { content: JSON.stringify(this.kids) } }
-                        })
+                        body: JSON.stringify({ files: { 'stars.json': { content: JSON.stringify(this.kids) } } })
                     });
-                    if (res.ok) this.status = '✅ 保存成功';
-                    else throw new Error();
+                    this.status = '✅ 已存入云端';
                 } catch (e) {
                     this.status = '❌ 保存出错';
                 }
             },
-            change(kidId, val) {
-                // 安全防误触：大额分值（>2）弹出确认
-                if (Math.abs(val) > 2) {
-                    if (!confirm(`确定要执行 ${val} 星的操作吗？`)) return;
-                }
+            // 核心交互：点击按钮后的双重弹窗逻辑
+            startProcess(kidId, val) {
+                const kidName = kidId === 'kid1' ? '大宝' : '小宝';
+                const action = val > 0 ? '奖励' : '扣减';
+                
+                // 第一步：弹出输入框要求输入原因
+                const reason = prompt(`请输入给${kidName}${action}${Math.abs(val)}颗星的原因:`);
+                
+                // 如果用户取消或未输入，则终止
+                if (reason === null) return; 
+                const finalReason = reason.trim() || (val > 0 ? '表现优秀' : '需要改进');
 
+                // 第二步：弹出确认框显示结果
+                const confirmMsg = `【操作确认】\n对象：${kidName}\n变动：${val > 0 ? '+' : ''}${val} 颗星\n原因：${finalReason}\n\n确定要提交吗？`;
+                
+                if (confirm(confirmMsg)) {
+                    this.executeChange(kidId, val, finalReason);
+                }
+            },
+            executeChange(kidId, val, reason) {
                 const now = new Date();
                 const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
-                const reason = this.reasons[kidId].trim() || (val > 0 ? '表现出色' : '继续努力');
                 
                 this.kids[kidId].total = parseFloat((this.kids[kidId].total + val).toFixed(1));
                 this.kids[kidId].logs.push({ date: dateStr, reason: reason, change: val });
-                this.reasons[kidId] = '';
                 this.save();
             },
             doConfig() {
-                // 再次增加一道管理密码锁
-                if (prompt("请输入家长管理密码:") !== "1234") return;
-
+                if (prompt("请输入家长管理口令:") !== "1234") return;
                 const t = prompt("GitHub Token:", this.token);
                 const g = prompt("Gist ID:", this.gistId);
                 if (t && g) {
