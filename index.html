@@ -1,95 +1,35 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>云端星星榜</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-    <style>
-        body { font-family: 'PingFang SC', sans-serif; background: #fdf6e3; padding: 15px; }
-        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .stars { font-size: 40px; color: #f1c40f; margin: 10px 0; }
-        .btn { padding: 8px 15px; border-radius: 5px; border: none; color: white; cursor: pointer; }
-        .btn-add { background: #2ecc71; }
-        .btn-sub { background: #e74c3c; }
-        .history { font-size: 12px; color: #7f8c8d; border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px; }
-        .admin-panel { background: #eee; padding: 15px; border-radius: 10px; margin-top: 20px; }
-    </style>
-</head>
-<body>
-<div id="app">
-    <h1>🌟 宝贝成长云榜单</h1>
-    
-    <div v-for="(kid, id) in kids" :key="id" class="card">
-        <h2>{{ id === 'kid1' ? '大宝' : '小宝' }}</h2>
-        <div class="stars">✨ {{ kid.total }}</div>
-        
-        <div v-if="isAdmin">
-            <input v-model="reasons[id]" placeholder="给个理由吧...">
-            <button class="btn btn-add" @click="change(id, 1)">+1</button>
-            <button class="btn btn-sub" @click="change(id, -1)">-1</button>
-        </div>
+// 替换 index.html 中的整个 <script> 部分
+const API_URL = "https://star.dabinkun-8b8.workers.dev"; 
 
-        <div class="history">
-            <div v-for="log in kid.logs.slice(-3)">
-                {{ log.date }} | {{ log.reason }} ({{ log.change > 0 ? '+' : '' }}{{ log.change }})
-            </div>
-        </div>
-    </div>
-
-    <div class="admin-panel">
-        <button v-if="!isAdmin" @click="login">🔒 管理员登录</button>
-        <button v-else @click="isAdmin = false">🔓 退出管理</button>
-        <p style="font-size: 10px; color: #999;">状态: {{ status }}</p>
-    </div>
-</div>
-
-<script>
-    const API_URL = "https://star.dabinkun-8b8.workers.dev"; // 替换成你部署后的 Worker 域名
-
-    new Vue({
-        el: '#app',
-        data: {
-            isAdmin: false,
-            status: '同步中...',
-            reasons: { kid1: '', kid2: '' },
-            kids: { kid1: { total: 0, logs: [] }, kid2: { total: 0, logs: [] } }
-        },
-        async created() {
-            this.load();
-        },
-        methods: {
-            async load() {
-                try {
-                    const res = await fetch(`${API_URL}/get`);
-                    this.kids = await res.json();
-                    this.status = '数据已同步';
-                } catch (e) { this.status = '同步失败'; }
-            },
-            async save() {
-                this.status = '上传中...';
-                await fetch(`${API_URL}/save`, {
-                    method: 'POST',
-                    body: JSON.stringify(this.kids)
+new Vue({
+    el: '#app',
+    data: {
+        isAdmin: false,
+        status: '正在连接云端...',
+        reasons: { kid1: '', kid2: '' },
+        kids: { kid1: { total: 0, logs: [] }, kid2: { total: 0, logs: [] } }
+    },
+    async created() {
+        // 增加延时请求，防止 GitHub 加载过快导致的网络竞争
+        setTimeout(() => { this.load(); }, 500);
+    },
+    methods: {
+        async load() {
+            try {
+                // 明确指定请求头和模式
+                const res = await fetch(API_URL, { 
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' }
                 });
-                this.status = '已云端存储';
-            },
-            async change(kidId, val) {
-                const reason = this.reasons[kidId] || (val > 0 ? "表现棒棒哒" : "下次注意哦");
-                this.kids[kidId].total += val;
-                this.kids[kidId].logs.push({
-                    date: new Date().toLocaleDateString(),
-                    change: val,
-                    reason: reason
-                });
-                this.reasons[kidId] = '';
-                await this.save();
-            },
-            login() {
-                if (prompt("请输入管理员密码") === "Abby193823") this.isAdmin = true;
+                if (!res.ok) throw new Error(`HTTP状态码: ${res.status}`);
+                this.kids = await res.json();
+                this.status = '☁️ 云端同步成功';
+            } catch (e) {
+                console.error("同步详情:", e);
+                this.status = '❌ 同步失败: ' + e.message;
             }
-        }
-    });
-</script>
-</body>
-</html>
+        },
+        // ... 其余 save 和 change 函数保持不变 ...
+    }
+});
