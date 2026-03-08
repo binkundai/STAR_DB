@@ -108,30 +108,29 @@
                 }
             },
             async save() {
-                this.status = '⏳ 正在请求保存...';
-                try {
-                    const res = await fetch(`${API_BASE}/save`, {
-                        method: 'POST',
-                        mode: 'cors', // 关键跨域配置
-                        headers: { 
-                            'Content-Type': 'application/json', // 明确告知发送的是JSON
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(this.kids)
-                    });
-                    
-                    if (res.ok) {
-                        this.status = '✅ 云端保存成功，数据已更新';
-                    } else {
-                        // 如果后端拒绝，抓取具体的拒绝理由
-                        const errText = await res.text();
-                        throw new Error(`[${res.status}] ${errText}`);
-                    }
-                } catch (e) {
-                    console.error("保存报错详情:", e);
-                    // 把详细错误显示在页面底部
-                    this.status = '❌ 保存失败: ' + e.message;
-                }
+    this.status = '⏳ 正在尝试存入云端...';
+    try {
+        // 限制日志数量，防止 URL 超出浏览器限制 (2000字符)
+        this.kids.kid1.logs = this.kids.kid1.logs.slice(-20);
+        this.kids.kid2.logs = this.kids.kid2.logs.slice(-20);
+        
+        const jsonData = JSON.stringify(this.kids);
+        // 💡 使用 GET 模式保存，绕过部分网络对 POST 的拦截
+        const res = await fetch(`${API_BASE}/save?d=${encodeURIComponent(jsonData)}`, {
+            method: 'GET',
+            mode: 'cors'
+        });
+        
+        if (res.ok) {
+            this.status = '✅ 云端保存成功';
+        } else {
+            throw new Error(`连接不稳定 (${res.status})`);
+        }
+    } catch (e) {
+        console.error(e);
+        this.status = '❌ 保存失败：建议切换 Wi-Fi 或开启代理';
+    }
+}
             },
             async change(kidId, val) {
                 const defaultReason = val > 0 ? "表现优秀" : "需要改进";
