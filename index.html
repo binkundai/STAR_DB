@@ -125,19 +125,28 @@
                     this.statusClass = 'status-error';
                 }
             },
-            startProcess(kidId, val) {
+           startProcess(kidId, val) {
+                const kidName = kidId === 'kid1' ? '嘟嘟 Albert' : '啵啵 Clement';
                 const action = val > 0 ? '奖励' : '扣减';
-                const reason = prompt(`[${action}${Math.abs(val)}星] 原因是?`);
-                if (reason === null) return; 
                 
+                // 第一步：弹出输入框要求输入原因
+                const reason = prompt(`请输入给${kidName}${action}${Math.abs(val)}颗星的原因:`);
+                
+                // 如果用户取消或未输入，则终止
+                if (reason === null) return; 
                 const finalReason = reason.trim() || (val > 0 ? '表现优秀' : '需要改进');
-                if (confirm(`确认提交?\n内容: ${finalReason}\n变动: ${val}星`)) {
+
+                // 第二步：弹出确认框显示结果
+                const confirmMsg = `【操作确认】\n对象：${kidName}\n变动：${val > 0 ? '+' : ''}${val} 颗星\n原因：${finalReason}\n\n确定要提交吗？`;
+                
+                if (confirm(confirmMsg)) {
                     this.executeChange(kidId, val, finalReason);
                 }
             },
             executeChange(kidId, val, reason) {
                 const now = new Date();
                 const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+                
                 this.kids[kidId].total = parseFloat((this.kids[kidId].total + val).toFixed(1));
                 this.kids[kidId].logs.push({ date: dateStr, reason: reason, change: val });
                 this.save();
