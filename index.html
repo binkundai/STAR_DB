@@ -36,11 +36,11 @@
 </head>
 <body>
 <div id="app" style="max-width: 500px; margin: auto;">
-    <h2 class="page-title" @click="handleHeaderClick">🌟 宝贝成长云榜单</h2>
+    <h2 class="page-title" @click="handleHeaderClick">🌟 宝贝成长荣誉榜</h2>
     
     <div v-for="(kid, id) in kids" :key="id" class="card">
         <div class="kid-header">
-            <span class="name">{{ id === 'kid1' ? '大宝' : '小宝' }}</span>
+            <span class="name">{{ id === 'kid1' ? '嘟嘟 Albert' : '啵啵 Clement' }}</span>
             <span style="font-size: 11px; color: #a0aec0;">ID: {{ id }}</span>
         </div>
         
