@@ -3,250 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>家庭作业管理系统 v2.0</title>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <title>🌟 宝贝成长荣誉榜</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <style>
-        :root { --primary-color: #4a90e2; --bg-color: #f5f7fa; --dudu-color: #34c759; --bobo-color: #af52de; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg-color); padding: 10px; margin: 0; }
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        .hidden { display: none !important; }
-        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
-        button { background: var(--primary-color); color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        
-        .date-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .nav-btn { width: 50px; background: none; color: var(--primary-color); font-size: 24px; padding: 0; margin: 0; }
-        .nav-btn:disabled { color: #ccc; }
-        
-        h3 { margin: 15px 0 5px 0; font-size: 1rem; color: #333; border-left: 4px solid var(--primary-color); padding-left: 8px; }
-        .h-all { border-color: #ff9500; color: #e67e22; }
-        .h-dudu { border-color: var(--dudu-color); color: var(--dudu-color); }
-        .h-bobo { border-color: var(--bobo-color); color: var(--bobo-color); }
+        :root { --gold: #f1c40f; --green: #2ecc71; --red: #e74c3c; --blue: #3498db; }
+        body { font-family: 'PingFang SC', system-ui; background: #f4f7f6; padding: 15px; margin: 0; color: #2c3e50; -webkit-user-select: none; }
+        .container { max-width: 500px; margin: auto; }
+        .page-title { text-align: center; color: #2d3748; margin: 15px 0 5px; font-size: 22px; letter-spacing: 2px; }
 
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 10px; }
-        td, th { border: 1px solid #eee; padding: 8px; font-size: 13px; text-align: left; overflow: hidden; }
-        .btn-add { width: auto; padding: 6px 12px; font-size: 12px; margin: 5px 0; }
-        .btn-save { background: #ff9500; margin-top: 20px; font-size: 18px; height: 50px; }
-        .img-preview { width: 35px; height: 35px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; cursor: pointer; }
-        .history-tag { color: #999; font-size: 12px; text-align: center; display: block; margin-top: 10px; }
-        
-        /* 响应式调整 */
-        @media (max-width: 350px) {
-            td, th { padding: 4px; font-size: 11px; }
-        }
+        /* 状态栏移至标题下方 */
+        .status-pill { display: flex; justify-content: center; margin-bottom: 20px; }
+        .status-text { background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 20px; font-size: 11px; color: #7f8c8d; font-weight: bold; }
+        .status-online { color: var(--green); }
+        .status-error { color: var(--red); }
+
+        .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); border: 1px solid #eee; }
+        .name { font-size: 20px; font-weight: bold; color: #1a202c; border-left: 4px solid var(--blue); padding-left: 10px; }
+        .total-stars { font-size: 48px; color: var(--gold); font-weight: 900; margin: 10px 0; text-align: center; }
+
+        /* 历史记录框 - 支持滑动查看更多 */
+        .history-box { background: #fffcf5; border-radius: 14px; padding: 12px; margin-top: 15px; font-size: 13px; max-height: 200px; overflow-y: scroll; border: 1px solid #f3eada; -webkit-overflow-scrolling: touch; }
+        .log-item { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f1f1f1; align-items: center; }
+        .log-date { color: #a0aec0; font-size: 10px; width: 80px; }
+        .log-reason { flex: 1; margin: 0 8px; color: #4a5568; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .admin-section { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ddd; }
+        .score-label { font-size: 11px; font-weight: bold; margin: 10px 0 8px; color: #94a3b8; }
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        button { border: none; border-radius: 12px; padding: 12px 0; font-weight: bold; cursor: pointer; color: white; font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,0.1); }
+        button:active { transform: translateY(2px); box-shadow: none; }
+        .btn-add { background: var(--green); }
+        .btn-sub { background: var(--red); }
     </style>
 </head>
 <body>
+<div id="app" class="container">
+    <h2 class="page-title" @click="handleHeaderClick">🌟 宝贝成长荣誉榜</h2>
 
-    <div id="loginView" class="card">
-        <h2 style="text-align:center; color:var(--primary-color);">🏠 作业系统登录</h2>
-        <select id="userRole">
-            <option value="admin">家长 (管理员)</option>
-            <option value="dudu">嘟嘟</option>
-            <option value="bobo">啵啵</option>
-        </select>
-        <input type="password" id="password" placeholder="访问密码">
-        <button onclick="doLogin()">登 录</button>
+    <div class="status-pill">
+        <span class="status-text" :class="statusClass">● {{ status }}</span>
     </div>
 
-    <div id="appView" class="card hidden">
-        <div class="date-nav">
-            <button id="prevBtn" class="nav-btn" onclick="changeDate(-1)">⬅️</button>
-            <h2 id="dateTitle" style="margin:0; font-size:1.1rem;">日期读取中...</h2>
-            <button id="nextBtn" class="nav-btn" onclick="changeDate(1)">➡️</button>
-        </div>
-        
-        <p style="font-size:12px; color:#666; text-align:center; margin-bottom:15px;">当前: <span id="userDisplay"></span> | <a href="javascript:location.reload()">退出</a></p>
-        
-        <div id="adminArea" class="hidden">
-            <h3 class="h-all">📋 1. 通用作业 (嘟嘟+啵啵)</h3>
-            <table id="tbl-all"><thead><tr><th width="35%">科目</th><th width="45%">内容</th><th width="20%">操作</th></tr></thead><tbody class="list-body"></tbody></table>
-            <button class="btn-add" onclick="addRow('all')">+ 增加通用项</button>
+    <div v-for="(kid, id) in kids" :key="id" class="card">
+        <div class="name">{{ id === 'kid1' ? '嘟嘟 Albert' : '啵啵 Clement' }}</div>
+        <div class="total-stars">✨ {{ kid.total }}</div>
 
-            <h3 class="h-dudu">👦 2. 嘟嘟专属作业</h3>
-            <table id="tbl-dudu"><thead><tr><th width="35%">科目</th><th width="45%">内容</th><th width="20%">操作</th></tr></thead><tbody class="list-body"></tbody></table>
-            <button class="btn-add" style="background:var(--dudu-color)" onclick="addRow('dudu')">+ 增加专属</button>
-
-            <h3 class="h-bobo">👧 3. 啵啵专属作业</h3>
-            <table id="tbl-bobo"><thead><tr><th width="35%">科目</th><th width="45%">内容</th><th width="20%">操作</th></tr></thead><tbody class="list-body"></tbody></table>
-            <button class="btn-add" style="background:var(--bobo-color)" onclick="addRow('bobo')">+ 增加专属</button>
-
-            <button id="saveBtn" class="btn-save" onclick="doSave()">🚀 发布今日作业并推送微信</button>
+        <div class="history-box">
+            <div v-if="kid.logs.length === 0" style="color:#ccc; text-align:center; padding:10px;">暂无历史</div>
+            <div v-for="(log, idx) in kid.logs.slice().reverse()" :key="idx" class="log-item">
+                <span class="log-date">{{ log.date }}</span>
+                <span class="log-reason">{{ log.reason }}</span>
+                <span :style="{color: log.change > 0 ? 'var(--green)' : 'var(--red)', fontWeight: 'bold'}">
+                    {{ log.change > 0 ? '+' : '' }}{{ log.change }}
+                </span>
+            </div>
         </div>
 
-        <div id="studentArea" class="hidden">
-            <table id="tbl-student"><thead><tr><th width="30%">科目</th><th width="45%">内容</th><th width="25%">拍照反馈</th></tr></thead><tbody id="studentBody"></tbody></table>
+        <div class="admin-section">
+            <div class="score-label">奖励分值</div>
+            <div class="btn-grid">
+                <button v-for="v in [0.5, 1, 2, 5, 10, 15]" class="btn-add" @click="startProcess(id, v)">+{{v}}</button>
+            </div>
+            <div class="score-label">改进提醒</div>
+            <div class="btn-grid">
+                <button v-for="v in [0.5, 1, 2, 5, 10, 15]" class="btn-sub" @click="startProcess(id, -v)">-{{v}}</button>
+            </div>
         </div>
-
-        <span id="readonlyMsg" class="history-tag hidden">⚠️ 历史记录仅供查阅</span>
     </div>
+</div>
 
-    <script>
-        const SB_URL = "https://mupjybbafixsmdlsqxxq.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11cGp5YmJhZml4c21kbHNxeHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMzUwMTcsImV4cCI6MjA4ODYxMTAxN30.bfNvl_e30pv8EVNeMcJj7O60p96ltp96J2abm2YT7hA"; 
-        const SERVER_CHAN_KEY = "SCT135651TZHh6tUlVaovebckiayAAfcuwv"; 
-
-        const client = window.supabase.createClient(SB_URL, SB_KEY);
-        const users = {'admin':'840802', 'dudu':'dudu', 'bobo':'bobo'};
-        const subjects = ["学而思数学", "乐读数学", "乐读英语", "乐读语文", "校内作业", "集训队", "其他"];
-        
-        // --- 预设的每日重复作业清单 ---
-        const defaultCommonTasks = [
-            {s: "学而思数学", c: "数感小超市 每天1页"},
-            {s: "乐读数学", c: "乐读小超市 每天1页"},
-            {s: "乐读英语", c: "单词小超市 每天1页"},
-            {s: "乐读语文", c: "小花园 每天1页"},
-            {s: "乐读语文", c: "生字描红本 每天1页"}           
-        ];
-
-        let currentRole = '';
-        const realToday = new Date();
-        let viewDate = new Date();
-
-        function getGmt8DateStr(date) {
-            return new Intl.DateTimeFormat('zh-CN', {timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'}).format(date).replace(/\//g, '-');
-        }
-        const todayStr = getGmt8DateStr(realToday);
-
-        function doLogin() {
-            const role = document.getElementById('userRole').value;
-            const pwd = document.getElementById('password').value;
-            if (users[role] === pwd) {
-                currentRole = role;
-                document.getElementById('userDisplay').innerText = role === 'admin' ? '家长' : (role === 'dudu' ? '👦 嘟嘟' : '👧 啵啵');
-                document.getElementById('loginView').classList.add('hidden');
-                document.getElementById('appView').classList.remove('hidden');
-                loadDashboard();
-            } else { alert("密码错误"); }
-        }
-
-        function changeDate(days) {
-            const newDate = new Date(viewDate);
-            newDate.setDate(newDate.getDate() + days);
-            const diffDays = Math.floor((realToday - newDate) / 864e5);
-            if (newDate > realToday && getGmt8DateStr(newDate) !== todayStr) return;
-            if (diffDays > 7) return;
-            viewDate = newDate;
-            loadDashboard();
-        }
-
-        async function loadDashboard() {
-            const dateStr = getGmt8DateStr(viewDate);
-            const isToday = (dateStr === todayStr);
-            const isAdmin = (currentRole === 'admin');
-            
-            document.getElementById('dateTitle').innerText = dateStr + (isToday ? " (今日)" : "");
-            document.getElementById('prevBtn').disabled = (Math.floor((realToday - viewDate)/864e5) >= 7);
-            document.getElementById('nextBtn').disabled = isToday;
-            document.getElementById('readonlyMsg').classList.toggle('hidden', isToday);
-
-            document.querySelectorAll('.list-body, #studentBody').forEach(b => b.innerHTML = '');
-
-            try {
-                const { data, error } = await client.from('HOMEWORK_TASKS').select('*').eq('date_str', dateStr);
-                if (error) throw error;
-
-                if (isAdmin) {
-                    document.getElementById('adminArea').classList.remove('hidden');
-                    document.getElementById('studentArea').classList.add('hidden');
-                    
-                    if (data && data.length > 0) {
-                        data.forEach(d => addRow(d.target_user || 'all', d));
-                    } else if (isToday) {
-                        // 初始加载：自动填充通用作业，个人专属留空
-                        defaultCommonTasks.forEach(t => addRow('all', {subject:t.s, content:t.c}));
-                        // 给专属区域预留一行空白方便输入
-                        addRow('dudu'); addRow('bobo');
-                    }
-                } else {
-                    document.getElementById('adminArea').classList.add('hidden');
-                    document.getElementById('studentArea').classList.remove('hidden');
-                    const myData = data.filter(d => d.target_user === 'all' || d.target_user === currentRole);
-                    if (myData.length > 0) {
-                        myData.forEach(d => addStaticRow(d, isToday));
-                    } else {
-                        document.getElementById('studentBody').innerHTML = '<tr><td colspan="3" style="text-align:center">此日暂无作业 ☕</td></tr>';
-                    }
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            status: '正在连接...',
+            statusClass: '',
+            kids: { kid1: { total: 0, logs: [] }, kid2: { total: 0, logs: [] } },
+            token: '', gistId: '',
+            clickCount: 0
+        },
+        mounted() {
+            this.token = localStorage.getItem('stars_token');
+            this.gistId = localStorage.getItem('stars_gistid');
+            if (this.token && this.gistId) { this.load(); }
+            else { this.status = '待配置 (连击标题)'; }
+        },
+        methods: {
+            handleHeaderClick() {
+                this.clickCount++;
+                if (this.clickCount === 5) { this.doConfig(); this.clickCount = 0; }
+                setTimeout(() => { this.clickCount = 0; }, 2000);
+            },
+            async load() {
+                try {
+                    const res = await fetch(`https://api.github.com/gists/${this.gistId}?t=${Date.now()}`, {
+                        headers: { 'Authorization': `token ${this.token}` }
+                    });
+                    const data = await res.json();
+                    this.kids = JSON.parse(data.files['stars.json'].content);
+                    this.status = '云端已就绪';
+                    this.statusClass = 'status-online';
+                } catch (e) {
+                    this.status = '同步失败';
+                    this.statusClass = 'status-error';
                 }
-            } catch (err) { alert("加载失败: " + err.message); }
-        }
-
-        function addRow(type, data = null) {
-            const tbody = document.querySelector(`#tbl-${type} .list-body`);
-            const tr = document.createElement('tr');
-            let opts = subjects.map(s => `<option value="${s}" ${(data && data.subject === s) ? 'selected' : ''}>${s}</option>`).join('');
-            tr.innerHTML = `<td><select class="s-in">${opts}</select></td><td><input type="text" class="c-in" value="${data ? data.content : ''}" placeholder="内容"></td><td><button class="btn-del" onclick="this.parentElement.parentElement.remove()">删</button></td>`;
-            tbody.appendChild(tr);
-        }
-
-        function addStaticRow(d, isToday) {
-            const tr = document.createElement('tr');
-            const img = d.image_url ? `<img src="${d.image_url}" class="img-preview" onclick="window.open('${d.image_url}')">` : '';
-            const btn = isToday ? `<button style="width:auto;padding:5px;font-size:12px;background:#5856d6;" onclick="triggerCamera(${d.id})">📸</button>` : '';
-            tr.innerHTML = `<td><b>${d.subject}</b></td><td>${d.content}</td><td>${img}${btn}<input type="file" id="cam-${d.id}" accept="image/*" capture="environment" style="display:none" onchange="handleFileSelect(this, ${d.id})"></td>`;
-            document.getElementById('studentBody').appendChild(tr);
-        }
-
-        async function doSave() {
-            const dateStr = getGmt8DateStr(viewDate);
-            const tasks = [];
-            let pushText = `📅 作业更新: ${dateStr}\n`;
-
-            ['all', 'dudu', 'bobo'].forEach(type => {
-                const rows = document.querySelectorAll(`#tbl-${type} .list-body tr`);
-                let typeHasData = false;
-                let tempPush = `\n【${type==='all'?'通用':(type==='dudu'?'嘟嘟':'啵啵')}】\n`;
-                
-                rows.forEach(r => {
-                    const s = r.querySelector('.s-in').value;
-                    const c = r.querySelector('.c-in').value;
-                    if (c.trim()) {
-                        tasks.push({ date_str: dateStr, subject: s, content: c.trim(), target_user: type });
-                        tempPush += `• ${s}: ${c.trim()}\n`;
-                        typeHasData = true;
-                    }
-                });
-                if(typeHasData) pushText += tempPush;
-            });
-
-            if (tasks.length === 0) return alert("内容不能为空");
-
-            const saveBtn = document.getElementById('saveBtn');
-            saveBtn.disabled = true;
-            saveBtn.innerText = "推送中...";
-
-            try {
-                await client.from('HOMEWORK_TASKS').delete().eq('date_str', dateStr);
-                const { error } = await client.from('HOMEWORK_TASKS').insert(tasks);
-                if (error) throw error;
-
-                if (SERVER_CHAN_KEY.startsWith("SCT")) {
-                    const title = encodeURIComponent(`作业已更新(${dateStr})`);
-                    const desp = encodeURIComponent(pushText + `\n请进入系统查看图片详情。`);
-                    await fetch(`https://sctapi.ftqq.com/${SERVER_CHAN_KEY}.send?title=${title}&desp=${desp}`, {mode:'no-cors'});
+            },
+            async save() {
+                this.status = '正在同步...';
+                try {
+                    // 数据修剪至 30 条
+                    this.kids.kid1.logs = this.kids.kid1.logs.slice(-30);
+                    this.kids.kid2.logs = this.kids.kid2.logs.slice(-30);
+                    const res = await fetch(`https://api.github.com/gists/${this.gistId}`, {
+                        method: 'PATCH',
+                        headers: { 'Authorization': `token ${this.token}` },
+                        body: JSON.stringify({ files: { 'stars.json': { content: JSON.stringify(this.kids) } } })
+                    });
+                    if (res.ok) { this.status = '更新成功'; this.statusClass = 'status-online'; }
+                } catch (e) {
+                    this.status = '保存失败';
+                    this.statusClass = 'status-error';
                 }
-                alert("发布成功！");
-                loadDashboard();
-            } catch (err) { alert("失败: " + err.message); }
-            finally { saveBtn.disabled = false; saveBtn.innerText = "🚀 发布今日作业并推送微信"; }
-        }
+            },
+           startProcess(kidId, val) {
+                const kidName = kidId === 'kid1' ? '嘟嘟 Albert' : '啵啵 Clement';
+                const kidName = kidId === 'kid1' ? ' 嘟嘟 ' : ' 啵啵 ';
+                const action = val > 0 ? '奖励' : '扣减';
 
-        function triggerCamera(id) { document.getElementById(`cam-${id}`).click(); }
+                // 第一步：弹出输入框要求输入原因
+                const reason = prompt(`请输入给${kidName}${action}${Math.abs(val)}颗星的原因:`);
 
-        async function handleFileSelect(input, taskId) {
-            const file = input.files[0];
-            if (!file) return;
-            const btn = input.previousElementSibling;
-            btn.innerText = "...";
-            try {
-                const fileName = `hw_${taskId}_${Date.now()}.jpg`;
-                await client.storage.from('HOMEWORK_PHOTOS').upload(fileName, file);
-                const { data: urlData } = client.storage.from('HOMEWORK_PHOTOS').getPublicUrl(fileName);
-                await client.from('HOMEWORK_TASKS').update({ image_url: urlData.publicUrl }).eq('id', taskId);
-                alert("提交成功！");
-                loadDashboard();
-            } catch (err) { alert("上传失败: " + err.message); btn.innerText = "📸"; }
+                // 如果用户取消或未输入，则终止
+                if (reason === null) return; 
+                const finalReason = reason.trim() || (val > 0 ? '表现优秀' : '需要改进');
+
+                // 第二步：弹出确认框显示结果
+                const confirmMsg = `【操作确认】\n对象：${kidName}\n变动：${val > 0 ? '+' : ''}${val} 颗星\n原因：${finalReason}\n\n确定要提交吗？`;
+
+                if (confirm(confirmMsg)) {
+                    this.executeChange(kidId, val, finalReason);
+                }
+            },
+            executeChange(kidId, val, reason) {
+                const now = new Date();
+                const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+                this.kids[kidId].total = parseFloat((this.kids[kidId].total + val).toFixed(1));
+                this.kids[kidId].logs.push({ date: dateStr, reason: reason, change: val });
+                this.save();
+            },
+            doConfig() {
+                if (prompt("管理口令:") !== "1234") return;
+                const t = prompt("Token:", this.token);
+                const g = prompt("Gist ID:", this.gistId);
+                if (t && g) {
+                    localStorage.setItem('stars_token', t.trim());
+                    localStorage.setItem('stars_gistid', g.trim());
+                    location.reload();
+                }
+            }
         }
-    </script>
+    });
+</script>
 </body>
 </html>
