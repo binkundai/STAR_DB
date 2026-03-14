@@ -10,7 +10,7 @@
         body { font-family: 'PingFang SC', system-ui; background: #f4f7f6; padding: 15px; margin: 0; color: #2c3e50; -webkit-user-select: none; }
         .container { max-width: 500px; margin: auto; }
         .page-title { text-align: center; color: #2d3748; margin: 15px 0 5px; font-size: 22px; letter-spacing: 2px; }
-
+        
         /* 状态栏移至标题下方 */
         .status-pill { display: flex; justify-content: center; margin-bottom: 20px; }
         .status-text { background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 20px; font-size: 11px; color: #7f8c8d; font-weight: bold; }
@@ -20,7 +20,7 @@
         .card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); border: 1px solid #eee; }
         .name { font-size: 20px; font-weight: bold; color: #1a202c; border-left: 4px solid var(--blue); padding-left: 10px; }
         .total-stars { font-size: 48px; color: var(--gold); font-weight: 900; margin: 10px 0; text-align: center; }
-
+        
         /* 历史记录框 - 支持滑动查看更多 */
         .history-box { background: #fffcf5; border-radius: 14px; padding: 12px; margin-top: 15px; font-size: 13px; max-height: 200px; overflow-y: scroll; border: 1px solid #f3eada; -webkit-overflow-scrolling: touch; }
         .log-item { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #f1f1f1; align-items: center; }
@@ -39,15 +39,15 @@
 <body>
 <div id="app" class="container">
     <h2 class="page-title" @click="handleHeaderClick">🌟 宝贝成长荣誉榜</h2>
-
+    
     <div class="status-pill">
         <span class="status-text" :class="statusClass">● {{ status }}</span>
     </div>
-
+    
     <div v-for="(kid, id) in kids" :key="id" class="card">
-        <div class="name">{{ id === 'kid1' ? '嘟嘟 Albert' : '啵啵 Clement' }}</div>
+        <div class="name">{{ id === 'kid1' ? '大宝' : '小宝' }}</div>
         <div class="total-stars">✨ {{ kid.total }}</div>
-
+        
         <div class="history-box">
             <div v-if="kid.logs.length === 0" style="color:#ccc; text-align:center; padding:10px;">暂无历史</div>
             <div v-for="(log, idx) in kid.logs.slice().reverse()" :key="idx" class="log-item">
@@ -125,29 +125,19 @@
                     this.statusClass = 'status-error';
                 }
             },
-           startProcess(kidId, val) {
-                const kidName = kidId === 'kid1' ? '嘟嘟 Albert' : '啵啵 Clement';
-                const kidName = kidId === 'kid1' ? ' 嘟嘟 ' : ' 啵啵 ';
+            startProcess(kidId, val) {
                 const action = val > 0 ? '奖励' : '扣减';
-
-                // 第一步：弹出输入框要求输入原因
-                const reason = prompt(`请输入给${kidName}${action}${Math.abs(val)}颗星的原因:`);
-
-                // 如果用户取消或未输入，则终止
+                const reason = prompt(`[${action}${Math.abs(val)}星] 原因是?`);
                 if (reason === null) return; 
+                
                 const finalReason = reason.trim() || (val > 0 ? '表现优秀' : '需要改进');
-
-                // 第二步：弹出确认框显示结果
-                const confirmMsg = `【操作确认】\n对象：${kidName}\n变动：${val > 0 ? '+' : ''}${val} 颗星\n原因：${finalReason}\n\n确定要提交吗？`;
-
-                if (confirm(confirmMsg)) {
+                if (confirm(`确认提交?\n内容: ${finalReason}\n变动: ${val}星`)) {
                     this.executeChange(kidId, val, finalReason);
                 }
             },
             executeChange(kidId, val, reason) {
                 const now = new Date();
                 const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
-
                 this.kids[kidId].total = parseFloat((this.kids[kidId].total + val).toFixed(1));
                 this.kids[kidId].logs.push({ date: dateStr, reason: reason, change: val });
                 this.save();
